@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Query, Body, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 from typing import Optional
 from pydantic import BaseModel
-from uuid import UUID
+from uuid import uuid4, UUID
 
 class Tarefa(BaseModel):
     nome : str
@@ -9,11 +9,11 @@ class Tarefa(BaseModel):
     status : str = "nao concluidos"
 
 tarefas = {
-    UUID:Tarefa(
+    uuid4():Tarefa(
         nome = "Crud",
         descricao = "Fazer esse Crud funcionar"
     ),
-    UUID:Tarefa(
+    uuid4():Tarefa(
         nome = "Kill",
         descricao = "Matar 4 pessoas"
     )
@@ -23,11 +23,12 @@ app = FastAPI()
 
 @app.get("/tarefas/")
 async def listar_tarefas(q: str = "Todos"):
+    print(f"Listing tarefas, entrou {q}")
     '''
         Display all tasks
 
         **Options**
-        - Todos // Default, dont need to put as parameter
+        - Todos // Default
         - nao concluidos
         - concluidos
     '''
@@ -43,15 +44,15 @@ async def listar_tarefas(q: str = "Todos"):
         raise HTTPException(status_code=404, detail="Tarefas Not Found")
 
 
-@app.patch("/tarefa/{tarefa_id}/descricao", response_model=str)
-async def update_descricao(tarefa_id: UUID, nova_descricao: str):
+@app.patch("/{tarefa_id}/descricao", response_model=str)
+async def update_descricao(tarefa_id:UUID, nova_descricao: str):
     if tarefa_id not in tarefas:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     else:
         tarefas[tarefa_id].descricao = nova_descricao
         return nova_descricao
 
-@app.patch("/tarefa/{tarefa_id}/check")
+@app.patch("/{tarefa_id}/check")
 async def update_descricao(tarefa_id: UUID):
     if tarefa_id not in tarefas:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
@@ -60,9 +61,10 @@ async def update_descricao(tarefa_id: UUID):
             tarefas[tarefa_id].status = "não concluido"
         else:
             tarefas[tarefa_id].status = "concluido"
+    return 201
     
 
-@app.post("/tarefas/criar")
+@app.post("/criar")
 async def create_item(tarefa: Tarefa):
     '''
     Cria uma tarefa
@@ -70,13 +72,17 @@ async def create_item(tarefa: Tarefa):
     - Descrição
 
     '''
-    return Tarefa
+    tarefas[uuid4()] = tarefa
+    return tarefa
 
-@app.delete("tarefa/deletar/{id_tarefa}")
-async def deletar_tarefa(id_tarefa : UUID = Query(...), min_length = 1):
+@app.delete("/deletar/{id_tarefa}", status_code=204)
+async def deletar_tarefa(id_tarefa : UUID):
     '''
     Deleta uma tarefa
     Parâmetros:
     - Id da tarefa que deve ser deletada
     '''
-    del(tarefas, id_tarefa)
+    if id_tarefa not in tarefas:
+        raise HTTPException(status_code=404, detail="ID não encontrada")
+    
+    del tarefas[id_tarefa]
