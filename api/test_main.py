@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app
+from .main import app
 
 client = TestClient(app)
 
@@ -23,7 +23,7 @@ def test_create_task():
     }
 
 def test_show_task():
-    response = client.get("/tarefas/")
+    response = client.get("/listar/")
     assert response.status_code == 200
     global tarefa_uuid
     tarefa_uuid = list(response.json().keys())[0]
