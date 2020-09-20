@@ -1,25 +1,20 @@
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, APIRouter
 from typing import Optional
-from pydantic import BaseModel
 from uuid import uuid4, UUID
-
-class Tarefa(BaseModel):
-    nome : str
-    descricao : str
-    status : str = "nao concluidos"
-
-class DBSession:
-    tasks={}
-    def __init__(self):
-        self.tasks = DBSession.tasks
-    def get_db():
-        return DBSession()
+from .database import DBSession
+from .models import Tarefa
 
 db = DBSession()
-
+router = APIRouter()
 app = FastAPI()
+app.include_router(
+    router=router,
+    prefix="/tarefas",
+    tags=["tarefas"],
+    responses={404: {"description": "Not found"}},
+)
 
-@app.get("/tarefas/")
+@app.get("/listar/")
 async def listar_tarefas(q: str = "Todos"):
     print(f"Listing tarefas, entrou {q}")
     '''
