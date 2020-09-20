@@ -64,7 +64,7 @@ async def update_descricao(tarefa_id: UUID):
     return 201
     
 
-@app.post("/criar")
+@app.post("/criar", status_code=201)
 async def create_item(tarefa: Tarefa):
     '''
     Cria uma tarefa
@@ -75,7 +75,7 @@ async def create_item(tarefa: Tarefa):
     tarefas[uuid4()] = tarefa
     return tarefa
 
-@app.delete("/deletar/{id_tarefa}", status_code=204)
+@app.delete("/{id_tarefa}/deletar", status_code=204)
 async def deletar_tarefa(id_tarefa : UUID):
     '''
     Deleta uma tarefa
