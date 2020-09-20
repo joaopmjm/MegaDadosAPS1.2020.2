@@ -8,16 +8,14 @@ class Tarefa(BaseModel):
     descricao : str
     status : str = "nao concluidos"
 
-tarefas = {
-    uuid4():Tarefa(
-        nome = "Crud",
-        descricao = "Fazer esse Crud funcionar"
-    ),
-    uuid4():Tarefa(
-        nome = "Kill",
-        descricao = "Matar 4 pessoas"
-    )
-}
+class DBSession:
+    tasks={}
+    def __init__(self):
+        self.tasks = DBSession.tasks
+    def get_db():
+        return DBSession()
+
+db = DBSession()
 
 app = FastAPI()
 
@@ -33,12 +31,12 @@ async def listar_tarefas(q: str = "Todos"):
         - concluidos
     '''
     if q == "Todos":
-        return tarefas
+        return db.tasks
     if q == "não concluido" or q == "concluido":
         tarefas_selecionadas = {}
-        for i in tarefas:
-            if tarefas[i] == q:
-                tarefas_selecionadas[i] = tarefas[i]
+        for i in db.tasks:
+            if db.tasks[i] == q:
+                tarefas_selecionadas[i] = db.tasks[i]
         return tarefas_selecionadas
     else:
         raise HTTPException(status_code=404, detail="Tarefas Not Found")
@@ -46,21 +44,21 @@ async def listar_tarefas(q: str = "Todos"):
 
 @app.patch("/{tarefa_id}/descricao", response_model=str)
 async def update_descricao(tarefa_id:UUID, nova_descricao: str):
-    if tarefa_id not in tarefas:
+    if tarefa_id not in db.tasks:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     else:
-        tarefas[tarefa_id].descricao = nova_descricao
+        db.tasks[tarefa_id].descricao = nova_descricao
         return nova_descricao
 
 @app.patch("/{tarefa_id}/check")
 async def update_descricao(tarefa_id: UUID):
-    if tarefa_id not in tarefas:
+    if tarefa_id not in db.tasks:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     else:
-        if tarefas[tarefa_id].status == "concluido":
-            tarefas[tarefa_id].status = "não concluido"
+        if db.tasks[tarefa_id].status == "concluido":
+            db.tasks[tarefa_id].status = "não concluido"
         else:
-            tarefas[tarefa_id].status = "concluido"
+            db.tasks[tarefa_id].status = "concluido"
     return 201
     
 
@@ -72,7 +70,7 @@ async def create_item(tarefa: Tarefa):
     - Descrição
 
     '''
-    tarefas[uuid4()] = tarefa
+    db.tasks[uuid4()] = tarefa
     return tarefa
 
 @app.delete("/{id_tarefa}/deletar", status_code=204)
@@ -82,7 +80,7 @@ async def deletar_tarefa(id_tarefa : UUID):
     Parâmetros:
     - Id da tarefa que deve ser deletada
     '''
-    if id_tarefa not in tarefas:
+    if id_tarefa not in db.tasks:
         raise HTTPException(status_code=404, detail="ID não encontrada")
     
-    del tarefas[id_tarefa]
+    del db.tasks[id_tarefa]

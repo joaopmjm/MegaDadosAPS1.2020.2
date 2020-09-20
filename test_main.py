@@ -10,12 +10,6 @@ def test_read_main():
     assert response.status_code == 404
     assert response.json() == {'detail':'Not Found'}
 
-def test_show_task():
-    response = client.get("/tarefas/")
-    assert response.status_code == 200
-    global tarefa_uuid
-    tarefa_uuid = list(response.json().keys())[0]
-    
 def test_create_task():
     response = client.post("/criar", json={
         "nome": "teste",
@@ -27,6 +21,12 @@ def test_create_task():
         "descricao": "Descricao teste",
         "status": "nao concluidos"
     }
+
+def test_show_task():
+    response = client.get("/tarefas/")
+    assert response.status_code == 200
+    global tarefa_uuid
+    tarefa_uuid = list(response.json().keys())[0]
 
 def test_check_task():
     response = client.patch(f"/{tarefa_uuid}/check")
